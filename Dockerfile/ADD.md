@@ -25,7 +25,7 @@ __Расширение для таблицы 1__
     ADD <src.git> <dest>
     ADD --keep-git-dir=true <src.git> <dest>
 ```
-- **Пример использования**
+- **Пример**
 ```
     ADD git@github.com:Ritmichniy0/django.git#stable/0.90.x:docs
     ADD --keep-git-dir=true git@github.com:Ritmichniy0/django.git#stable/0.90.x:docs
@@ -46,7 +46,7 @@ __Расширение для таблицы 1__
 ADD [--checksum=<hash>] <src(network)> ... <dest>
 ```
 
-- **Пример использования**
+- **Пример**
 ```
 ADD --checksum=sha256:24454f830cdb571e2c4ad15481119c43b3cafd48dd869a9b2945d1036d1dc68d https://mirrors.edge.kernel.org/pub/linux/kernel/Historic/linux-0.01.tar.gz /
 ```
@@ -58,16 +58,19 @@ ADD --checksum=sha256:24454f830cdb571e2c4ad15481119c43b3cafd48dd869a9b2945d1036d
 1. Если файл изменился на сервере, но его URL тот же, Docker не загрузит его заново без изменения
 3. Поддерживает __только__ http/https
 
-## Схожие методы с COPY
-
 ### 3. --chown и chmod
 
 - **Описание**: Устанавливает права доступа к файлам. Задает владельца файлов и директорий в контейнере
 
-- **Пример использования**
+- **Команда**
 ```
-COPY [--chown=<user>:<group>] [--chmod=<perms> ...] <src> ... <dest>
+    ADD [--chown=<user>:<group>] [--chmod=<perms> ...] <src> ... <dest>
 ```
+- **Пример**
+```
+    ADD --chown=myuser:mygroup --chmod=644 https://releases.ubuntu.com/noble/ /somedir/
+```
+
 
 __Права доступа(chmod)__ 
 | Код | Описание                                                                       |
@@ -82,14 +85,14 @@ __Права доступа(chmod)__
 
 - **Команда**
 ```
-COPY --link <src> <dest> 
+ADD --link <src> <dest> 
 ```
-- **Пример использования**
+- **Пример**
 ```
 # Этап 1: сборка
 FROM golang:1.20 AS builder # 1.Образ
 WORKDIR /app #Указываем рабочую директорию
-COPY --link . .  #Копируем файлы из лок. в контейнер
+ADD --link https://releases.ubuntu.com/noble/SHA256SUMS.gpg .  #Копируем файлы из лок. в контейнер
 RUN go build -o myapp #Запускаем билд Golang
 
 # Этап 2: финальный образ
@@ -111,39 +114,28 @@ CMD ["./myapp"] # Запускает myapp
 
 - **Команда**
 ```
-COPY [--exclude=<path> ...] <src> ... <dest>
+ADD [--exclude=<path> ...] <src> ... <dest>
 ```
 
-- **Пример использования**:
+- **Пример**:
 ```
-ADD --exclude=*.tmp /src/ /dest/
+ADD --exclude=*.tmp https://releases.ubuntu.com/noble/ /dest/
 ```
 
-## Другие операции схожи с COPY
+## Другие операции
 
 1. Добавление файлов с расширением .cs
 ```
-    ADD *.cs /Files/
+    ADD https://releases.ubuntu.com/noble/*.cs /Files/
 ```
 2. Добавление файла у которого расширение отличается
 ```
-    ADD index.?s /dest/
+    ADD https://releases.ubuntu.com/xenial/ubuntu-16.04.6-server-i386.m??????? /dest/
 ```
-?-заменяет ровно один символ (например, index.js, index.ts, но не index.vue)
+?-заменяет ровно один символ (например, metalink, manifest, но не main)
 
 3. Если же в имени файла есть '[' то экранировать это нужно при помощи
 ```
-ADD arr[[]0].* /dest/
+ADD https://releases.ubuntu.com/noble/arr[[]0].* /dest/
 ```
 Добавит все файлы arr[0].(с любым расширением)
-
-## Примечание если можно использовать COPY вместо ADD, то используйте COPY
-
-✅ Используй COPY, если...
-1. Просто копировать файлы из локальной директории в контейнер
-2. Нужна максимальная предсказуемость (без неожиданной распаковки)
-3. Избежать лишнего кеширования в Docker
-
-✅ Используй ADD, если...
-1. Нужно скачать файл по http/https (без curl) + git
-2. Копировать .tar.gz и хочешь, чтобы он автоматически распаковался
